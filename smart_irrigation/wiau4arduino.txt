@@ -1,0 +1,44 @@
+int waterLevel;
+const int relayPin = 3;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, LOW);
+  pinMode(A0, INPUT);
+}
+
+void loop() {
+  waterLevel = analogRead(A0);
+  String systemStatus;
+
+  Serial.print("Soil Moisture Level: ");
+  Serial.println(waterLevel);
+
+  if (waterLevel >= 1023) {
+    systemStatus = "SYSTEM_NOT_OPERATIONAL";
+  } else if (waterLevel >= 180 && waterLevel <= 300) {
+    systemStatus = "SYSTEM_OPERATIONAL";
+  } else if (waterLevel >= 950 && waterLevel <= 1000) {
+    while (waterLevel >= 950 && waterLevel <= 1000) {
+      digitalWrite(relayPin, HIGH); // Turn on the relay
+      delay(10000); // Irrigate for 10 seconds
+      digitalWrite(relayPin, LOW); // Turn off the relay
+      Serial.println("IRRIGATION_STARTED");
+      delay(10000); // Wait for 10 seconds before checking again
+      waterLevel = analogRead(A0); // Read the moisture level again
+      Serial.print("Soil Moisture Level: ");
+      Serial.println(waterLevel);
+    }
+    Serial.println("IRRIGATION_ENDED");
+  } else {
+    systemStatus = "UNKNOWN_STATUS";
+  }
+
+  Serial.print("Moisture level: ");
+  Serial.print(waterLevel);
+  Serial.print(", Status: ");
+  Serial.println(systemStatus);
+
+  delay(120000); // Check every 2 minutes
+}
